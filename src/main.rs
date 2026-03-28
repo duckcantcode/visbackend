@@ -1,11 +1,10 @@
 pub mod handlers;
+pub mod json;
 
 use actix_web::{App, HttpServer, middleware, web};
 use clap::{Arg, Command};
 
-struct AppState {
-
-}
+struct AppState {}
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -28,7 +27,7 @@ async fn main() -> std::io::Result<()> {
             Arg::new("serve")
                 .short('s')
                 .value_name("SERVE")
-                .help("Serve files from directory")
+                .help("Serve files from directory"),
         )
         .get_matches();
 
@@ -42,9 +41,8 @@ async fn main() -> std::io::Result<()> {
         .unwrap_or(&"8019".to_string())
         .parse::<u16>()
         .expect("Invalid port");
-    
-    let serve: Option<String> = matches
-        .get_one::<String>("serve").cloned();
+
+    let serve: Option<String> = matches.get_one::<String>("serve").cloned();
 
     log::info!(
         "starting HTTP server at http://{}:{}",
@@ -52,22 +50,19 @@ async fn main() -> std::io::Result<()> {
         listen_port
     );
 
-    let state = web::Data::new(AppState {
-
-    });
+    let state = web::Data::new(AppState {});
 
     HttpServer::new(move || {
         let mut app = App::new()
             .app_data(state.clone())
-            .service(crate::handlers::echo)
-            ;
-            match &serve {
-                Some(serve_path) => {
-                    app = app.service(actix_files::Files::new("/", serve_path).index_file("index.html")) 
-                },
-                None => ()
+            .service(crate::handlers::echo);
+        match &serve {
+            Some(serve_path) => {
+                app = app.service(actix_files::Files::new("/", serve_path).index_file("index.html"))
             }
-            app.wrap(middleware::Logger::default())
+            None => (),
+        }
+        app.wrap(middleware::Logger::default())
     })
     .workers(2)
     .bind((listen_ip, listen_port))?
