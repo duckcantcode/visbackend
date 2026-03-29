@@ -1,10 +1,17 @@
+pub mod backend;
 pub mod handlers;
 pub mod json;
 
 use actix_web::{App, HttpServer, middleware, web};
 use clap::{Arg, Command};
+use tokio::sync::RwLock;
 
-struct AppState {}
+use crate::backend::SongInfo;
+
+struct AppState {
+    // all threads will need to have access to the song info to send it to websockets
+    pub current_song: RwLock<Option<SongInfo>>,
+}
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -50,17 +57,16 @@ async fn main() -> std::io::Result<()> {
         listen_port
     );
 
-    let state = web::Data::new(AppState {});
+    let state = web::Data::new(AppState {
+        current_song: None.into(),
+    });
 
     HttpServer::new(move || {
         let mut app = App::new()
             .app_data(state.clone())
             .service(crate::handlers::echo);
-        match &serve {
-            Some(serve_path) => {
-                app = app.service(actix_files::Files::new("/", serve_path).index_file("index.html"))
-            }
-            None => (),
+        if let Some(serve_path) = &serve {
+            app = app.service(actix_files::Files::new("/", serve_path).index_file("index.html"))
         }
         app.wrap(middleware::Logger::default())
     })
