@@ -43,7 +43,6 @@ fn fft(samples: SampleIterator, info: AudioInfo) -> (Vec<Vec<f32>>, f32) {
     let sample_vec = samples
         .into_iter()
         .map(|sample| sample.unwrap())
-        .into_iter()
         .collect::<Vec<_>>()
         .chunks(info.channels())
         .map(|x| x.iter().sum::<f32>() / 2.0 as f32)
