@@ -66,7 +66,7 @@ fn fft(samples: SampleIterator, info: AudioInfo) -> (Vec<Vec<f32>>, f32) {
     }
     (
         frames,
-        (chunk_size as f32 / info.sample_rate() as f32) * 100.0,
+        (chunk_size as f32 / info.sample_rate() as f32) * 1000.0,
     )
 }
 pub fn conv(path: &Path) -> SongInfo {
