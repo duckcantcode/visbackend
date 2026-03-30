@@ -39,10 +39,15 @@ fn decode(path: &Path) -> Result<(SampleIterator, AudioInfo), String> {
     Ok((samples, info))
 }
 fn fft(samples: SampleIterator, info: AudioInfo) -> (Vec<Vec<f32>>, f32) {
-    let mut sample_vec = vec![];
-    for sample in samples {
-        sample_vec.push(sample.unwrap());
-    }
+    // deinterleave
+    let sample_vec = samples
+        .into_iter()
+        .map(|sample| sample.unwrap())
+        .into_iter()
+        .collect::<Vec<_>>()
+        .chunks(info.channels())
+        .map(|x| x.iter().sum::<f32>() / 2.0 as f32)
+        .collect::<Vec<_>>();
 
     let chunk_size = 1024;
     let chunks = sample_vec.chunks(chunk_size);
